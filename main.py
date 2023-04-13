@@ -6,7 +6,8 @@ import config
 import asyncio
 
 intents = discord.Intents.default()
-client = commands.Bot(intents=intents)
+status = discord.Status.offline
+client = commands.Bot(intents=intents, status=status)
 
 @client.check
 async def guild_only(ctx: discord.Interaction):
@@ -18,7 +19,8 @@ async def guild_only(ctx: discord.Interaction):
 @client.event
 async def on_ready():
     view = await create_button()
-    await client.get_channel(1064617179762393140).send(view=view)
+    embed = await create_embed()
+    await client.get_channel(1095390051829030972).send(view=view, embed=embed)
     print("ready")
 
 async def create_button():
@@ -28,8 +30,12 @@ async def create_button():
     view.add_item(button_start)
     return view
 
+async def create_embed():
+    embed = discord.Embed(title="verification", description=f"please use the button below to verify that you are not a robot", color=2829617)
+    return embed
+
 async def give_role(ctx: discord.Interaction):
-    role = discord.utils.get(ctx.guild.roles, name="test")
+    role = discord.utils.get(ctx.guild.roles, name="Dudes")
     await ctx.user.add_roles(role)
     await ctx.response.send_message("done", ephemeral=True)
     await asyncio.sleep(5)
