@@ -25,7 +25,7 @@ async def on_ready():
         title="verification", 
         description=f"please use the button below to verify that you are not a robot", 
         color=2829617)
-    await client.get_channel(1096122598171086979).send(view=view, embed=embed)
+    await client.get_channel(config.verification_channel).send(view=view, embed=embed)
     print("ready")
 
 async def create_button():
@@ -59,41 +59,41 @@ async def on_voice_state_update(member: discord.Member, before: discord.VoiceSta
     if before.channel == None:
         embed:discord.Embed = await log_embed(
             title=f"{member.name}#{member.discriminator}",
-            description=f"<@{member.id}> entered <#{after.channel.id}>",
+            description=f"<:green:1097244269267402812> <@{member.id}> entered <#{after.channel.id}>",
             user=member
             )
         await channel.send(embed=embed)
     if before.channel != None and after.channel != None and before.channel!=after.channel:
         embed:discord.Embed = await log_embed(
             title=f"{member.name}#{member.discriminator}",
-            description=f"<@{member.id}> moved from <#{before.channel.id}> to <#{after.channel.id}>",
+            description=f"<:blue:1097244258043445309> <@{member.id}> moved from <#{before.channel.id}> to <#{after.channel.id}>",
             user=member
         )
         await channel.send(embed=embed)
     if after.channel == None:
         embed:discord.Embed = await log_embed(
             title=f"{member.name}#{member.discriminator}",
-            description=f"<@{member.id}> left <#{before.channel.id}>",
+            description=f"<:red:1097244281816748072> <@{member.id}> left <#{before.channel.id}>",
             user=member
         )
         await channel.send(embed=embed)
 
 @client.event
-async def on_member_ban(guild: discord.Guild, user: discord.User):
+async def on_member_ban(guild: discord.Guild, user: discord.User, member: discord.Member):
     channel = client.get_channel(config.ban_log)
     embed:discord.Embed = await log_embed(
-        title="member banned",
-        description=f"<@{user.id}>",
+        title=f"{member.name}#{member.discriminator}",
+        description=f"<:red:1097244281816748072> <@{user.id}> was banned",
         user=user
     )
     await channel.send(embed=embed)
 
 @client.event
-async def on_member_unban(guild: discord.Guild, user: discord.User):
+async def on_member_unban(guild: discord.Guild, user: discord.User, member: discord.Member):
     channel = client.get_channel(config.ban_log)
     embed:discord.Embed = await log_embed(
-        title="member unbanned",
-        description=f"<@{user.id}>",
+        title=f"{member.name}#{member.discriminator}",
+        description=f"<:green:1097244269267402812> <@{user.id}> was unbanned",
         user=user
     )
     await channel.send(embed=embed)
@@ -104,7 +104,7 @@ async def on_message_edit(before: discord.Message, after: discord.Message):
     if before.content == after.content and after.attachments != [] and len(after.attachments) < len(before.attachments):
         embed:discord.Embed = await log_embed(
             title=f"{before.author.name}#{before.author.discriminator}",
-            description=f"<@{before.author.id}> removed attachment from {before.jump_url}\n",
+            description=f"<:red:1097244281816748072> <@{before.author.id}> removed attachment from {before.jump_url}\n",
             user=before.author
         )
         files = [item for item in before.attachments if item not in after.attachments]
@@ -113,20 +113,19 @@ async def on_message_edit(before: discord.Message, after: discord.Message):
     elif before.content != after.content:
         embed:discord.Embed = await log_embed(
             title=f"{before.author.name}#{before.author.discriminator}",
-            description=f"**<@{before.author.id}> edited message {before.jump_url}**",
+            description=f"<:blue:1097244258043445309> **<@{before.author.id}> edited message {before.jump_url}**",
             user=before.author
         )
         embed.add_field(name="before",value=before.content,inline=False)
         embed.add_field(name="after",value=after.content,inline=False)
         await channel.send(embed=embed)
-    
 
 @client.event
 async def on_message_delete(message: discord.Message):
     channel = client.get_channel(config.message_log)
     embed: discord.Embed = await log_embed(
         title=f"{message.author.name}#{message.author.discriminator}",
-        description=f"**deleted message sent by <@{message.author.id}> in <#{message.channel.id}>**\n{message.content}",
+        description=f"<:red:1097244281816748072> **deleted message sent by <@{message.author.id}> in <#{message.channel.id}>**\n{message.content}",
         user=message.author
     )
     log = await channel.send(embed=embed)
@@ -138,7 +137,7 @@ async def on_member_join(member: discord.Member):
     channel = client.get_channel(config.join_leave_log)
     embed: discord.Embed = await log_embed(
         title=f"{member.name}#{member.discriminator}",
-        description=f"<@{member.id}> joined the server",
+        description=f"<:green:1097244269267402812> <@{member.id}> joined the server",
         user=member
     )
     await channel.send(embed=embed)
@@ -148,7 +147,7 @@ async def on_member_remove(member: discord.Member):
     channel = client.get_channel(config.join_leave_log)
     embed: discord.Embed = await log_embed(
         title=f"{member.name}#{member.discriminator}",
-        description=f"<@{member.id}> left the server",
+        description=f"<:red:1097244281816748072> <@{member.id}> left the server",
         user=member
     )
     await channel.send(embed=embed)
