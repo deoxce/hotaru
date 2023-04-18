@@ -55,6 +55,7 @@ async def log_embed(title, description, user):
 
 @client.event
 async def on_voice_state_update(member: discord.Member, before: discord.VoiceState, after: discord.VoiceState):
+    if member.guild.id != config.guild_id: return None
     channel = client.get_channel(config.voice_log)
     if before.channel == None:
         embed:discord.Embed = await log_embed(
@@ -80,6 +81,7 @@ async def on_voice_state_update(member: discord.Member, before: discord.VoiceSta
 
 @client.event
 async def on_member_ban(guild: discord.Guild, user: discord.User, member: discord.Member):
+    if guild.id != config.guild_id: return None
     channel = client.get_channel(config.ban_log)
     embed:discord.Embed = await log_embed(
         title=f"{member.name}#{member.discriminator}",
@@ -90,6 +92,7 @@ async def on_member_ban(guild: discord.Guild, user: discord.User, member: discor
 
 @client.event
 async def on_member_unban(guild: discord.Guild, user: discord.User, member: discord.Member):
+    if guild.id != config.guild_id: return None
     channel = client.get_channel(config.ban_log)
     embed:discord.Embed = await log_embed(
         title=f"{member.name}#{member.discriminator}",
@@ -100,8 +103,9 @@ async def on_member_unban(guild: discord.Guild, user: discord.User, member: disc
 
 @client.event
 async def on_message_edit(before: discord.Message, after: discord.Message):
+    if before.guild.id != config.guild_id: return None
     channel = client.get_channel(config.message_log)
-    if before.content == after.content and after.attachments != [] and len(after.attachments) < len(before.attachments):
+    if before.content == after.content and len(after.attachments) < len(before.attachments):
         embed:discord.Embed = await log_embed(
             title=f"{before.author.name}#{before.author.discriminator}",
             description=f"<:red:1097244281816748072> <@{before.author.id}> removed attachment from {before.jump_url}\n",
@@ -122,10 +126,12 @@ async def on_message_edit(before: discord.Message, after: discord.Message):
 
 @client.event
 async def on_message_delete(message: discord.Message):
+    if message.author.id == client.user.id: return None
+    if message.guild.id != config.guild_id: return None
     channel = client.get_channel(config.message_log)
     embed: discord.Embed = await log_embed(
         title=f"{message.author.name}#{message.author.discriminator}",
-        description=f"<:red:1097244281816748072> **deleted message sent by <@{message.author.id}> in <#{message.channel.id}>**\n{message.content}",
+        description=f"<:red:1097244281816748072> **deleted message sent by <@{message.author.id}> in {message.jump_url}**\n{message.content}",
         user=message.author
     )
     log = await channel.send(embed=embed)
@@ -134,6 +140,7 @@ async def on_message_delete(message: discord.Message):
 
 @client.event
 async def on_member_join(member: discord.Member):
+    if member.guild.id != config.guild_id: return None
     channel = client.get_channel(config.join_leave_log)
     embed: discord.Embed = await log_embed(
         title=f"{member.name}#{member.discriminator}",
@@ -144,6 +151,7 @@ async def on_member_join(member: discord.Member):
 
 @client.event
 async def on_member_remove(member: discord.Member):
+    if member.guild.id != config.guild_id: return None
     channel = client.get_channel(config.join_leave_log)
     embed: discord.Embed = await log_embed(
         title=f"{member.name}#{member.discriminator}",
