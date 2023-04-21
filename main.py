@@ -5,11 +5,42 @@ from discord.ext import commands
 import config
 import asyncio
 
+from aiohttp import web
+
+async def handle(request: web.Request):
+    if request.path == '/hotarustop':
+        tgid = request.rel_url.query['user']
+        if tgid in config.admin_ids:
+            print("stopped")
+            asyncio.create_task(client.close())
+            return web.Response(text='bot stopped')
+        else:
+            print(tgid)
+            return web.Response(text='you have no permission')
+    elif request.path == '/ping':
+        print("pong")
+        return web.Response(text='pong 🏓')
+    else:
+        return web.Response(status=404)
+    
+async def start_http_server():
+    app = web.Application()
+    app.add_routes([web.get('/{tail:.*}', handle)])
+
+    runner = web.AppRunner(app)
+    await runner.setup()
+    site = web.TCPSite(runner, '0.0.0.0', 8080)
+    await site.start()
+
 intents = discord.Intents.default()
 intents.message_content = True
 intents.members = True
 status = discord.Status.offline
 client = commands.Bot(intents=intents, status=status)
+
+temp_channels = []
+
+client.loop.create_task(start_http_server())
 
 @client.check
 async def guild_only(ctx: discord.Interaction):
@@ -36,11 +67,25 @@ async def create_button():
     return view
 
 async def give_role(ctx: discord.Interaction):
-    role = discord.utils.get(ctx.guild.roles, name="test")
+    role = discord.utils.get(ctx.guild.roles, name=config.default_role)
     await ctx.user.add_roles(role)
     await ctx.response.send_message("done", ephemeral=True)
     await asyncio.sleep(5)
     await ctx.delete_original_response()
+
+async def voice_create(member: discord.Member):
+    global temp_channels
+    log_channel = client.get_channel(config.voice_log)
+    create_channel = client.get_channel(config.tempvoice_channel)
+    temp_channel = await create_channel.category.create_voice_channel(member.name)
+    temp_channels.append(temp_channel)
+    embed:discord.Embed = await log_embed(
+        title=f"{client.user.name}",
+        description=f"<:green:1097244269267402812> tempvoice <#{temp_channel.id}> was created",
+        user=client.user
+        )
+    await log_channel.send(embed=embed)
+    await member.move_to(temp_channel)
 
 async def log_embed(title, description, user):
     if user.avatar == None:
@@ -55,47 +100,63 @@ async def log_embed(title, description, user):
 
 @client.event
 async def on_voice_state_update(member: discord.Member, before: discord.VoiceState, after: discord.VoiceState):
+    global temp_channels
+    log_channel = client.get_channel(config.voice_log)
     if member.guild.id != config.guild_id: return None
-    channel = client.get_channel(config.voice_log)
+    # Joined channel
     if before.channel == None:
         embed:discord.Embed = await log_embed(
             title=f"{member.name}#{member.discriminator}",
             description=f"<:green:1097244269267402812> <@{member.id}> entered <#{after.channel.id}>",
             user=member
             )
-        await channel.send(embed=embed)
+        await log_channel.send(embed=embed)
+    # Moved between channels
     if before.channel != None and after.channel != None and before.channel!=after.channel:
         embed:discord.Embed = await log_embed(
             title=f"{member.name}#{member.discriminator}",
             description=f"<:blue:1097244258043445309> <@{member.id}> moved from <#{before.channel.id}> to <#{after.channel.id}>",
             user=member
         )
-        await channel.send(embed=embed)
+        await log_channel.send(embed=embed)
+    # Left channel
     if after.channel == None:
         embed:discord.Embed = await log_embed(
             title=f"{member.name}#{member.discriminator}",
             description=f"<:red:1097244281816748072> <@{member.id}> left <#{before.channel.id}>",
             user=member
         )
-        await channel.send(embed=embed)
+        await log_channel.send(embed=embed)
+    # Tempvoice creation
+    if after.channel != None and after.channel.id == config.tempvoice_channel:
+        await voice_create(member)
+    #   Tempvoice deletion
+    if before.channel != None and before.channel in temp_channels and before.channel.members == []:
+        await before.channel.delete()
+        embed:discord.Embed = await log_embed(
+            title=f"{client.user.name}",
+            description=f"<:red:1097244281816748072> tempvoice `#{before.channel.name}` was deleted",
+            user=client.user
+            )
+        await log_channel.send(embed=embed)
 
 @client.event
-async def on_member_ban(guild: discord.Guild, user: discord.User, member: discord.Member):
+async def on_member_ban(guild: discord.Guild, user: discord.User):
     if guild.id != config.guild_id: return None
     channel = client.get_channel(config.ban_log)
     embed:discord.Embed = await log_embed(
-        title=f"{member.name}#{member.discriminator}",
+        title=f"{user.name}#{user.discriminator}",
         description=f"<:red:1097244281816748072> <@{user.id}> was banned",
         user=user
     )
     await channel.send(embed=embed)
 
 @client.event
-async def on_member_unban(guild: discord.Guild, user: discord.User, member: discord.Member):
+async def on_member_unban(guild: discord.Guild, user: discord.User):
     if guild.id != config.guild_id: return None
     channel = client.get_channel(config.ban_log)
     embed:discord.Embed = await log_embed(
-        title=f"{member.name}#{member.discriminator}",
+        title=f"{user.name}#{user.discriminator}",
         description=f"<:green:1097244269267402812> <@{user.id}> was unbanned",
         user=user
     )
