@@ -51,13 +51,58 @@ async def guild_only(ctx: discord.Interaction):
 
 @client.event
 async def on_ready():
-    view = await create_button()
-    embed = discord.Embed(
-        title="verification", 
-        description=f"please use the button below to verify that you are not a robot", 
-        color=2829617)
-    await client.get_channel(config.verification_channel).send(view=view, embed=embed)
+    #verification
+    verif_embed = discord.Embed(title="verification", description=f"please use the button below to verify that you are not a robot", color=2829617)
+
+    verif_view = View(timeout=None)
+    button_start = Button(label="verification", style=discord.ButtonStyle.green)
+    button_start.callback = give_role
+    verif_view.add_item(button_start)
+
+    #interface
+    interface_embed = discord.Embed(title="tempvoice interface", description="", color=2829617)
+    interface_embed.set_image(url="https://media.discordapp.net/attachments/1101840195466301460/1101858557168734218/interface.png")
+
+    emoji_rename = discord.PartialEmoji(name="rename", animated=False, id=1101840047549984779)
+    emoji_limit = discord.PartialEmoji(name="limit", animated=False, id=1101840054764183592)
+    emoji_private = discord.PartialEmoji(name="private", animated=False, id=1101840061030477926)
+    emoji_region = discord.PartialEmoji(name="region", animated=False, id=1101840066990583880)
+    emoji_delete = discord.PartialEmoji(name="delete", animated=False, id=1101839965798793227)
+    interface_view = View(timeout=None)
+    button_rename = Button(label="", style=discord.ButtonStyle.blurple, emoji=emoji_rename)
+    button_limit = Button(label="", style=discord.ButtonStyle.blurple, emoji=emoji_limit)
+    button_private = Button(label="", style=discord.ButtonStyle.blurple, emoji=emoji_private)
+    button_region = Button(label="", style=discord.ButtonStyle.blurple, emoji=emoji_region)
+    button_delete = Button(label="", style=discord.ButtonStyle.blurple, emoji=emoji_delete)
+    button_rename.callback = rename
+    button_limit.callback = limit
+    button_private.callback = private
+    button_region.callback = region
+    button_delete.callback = delete
+    interface_view.add_item(button_rename)
+    interface_view.add_item(button_limit)
+    interface_view.add_item(button_private)
+    interface_view.add_item(button_region)
+    interface_view.add_item(button_delete)
+
+    await client.get_channel(config.verification_channel).send(view=verif_view, embed=verif_embed)
+    await client.get_channel(config.interface_channel).send(view=interface_view, embed=interface_embed)
     print("ready")
+
+async def rename():
+    pass
+
+async def limit():
+    pass
+
+async def private():
+    pass
+
+async def region():
+    pass
+
+async def delete():
+    pass
 
 async def create_button():
     view = View(timeout=None)
