@@ -85,6 +85,8 @@ async def on_ready():
     interface_view.add_item(button_region)
     interface_view.add_item(button_delete)
 
+    await client.get_channel(config.verification_channel).purge(limit=100)
+    await client.get_channel(config.interface_channel).purge(limit=100)
     await client.get_channel(config.verification_channel).send(view=verif_view, embed=verif_embed)
     await client.get_channel(config.interface_channel).send(view=interface_view, embed=interface_embed)
     print("ready")
