@@ -1,6 +1,6 @@
 import discord
 import discord.utils
-from discord.ui import Button, View
+from discord.ui import Button, View, Modal, InputText
 from discord.ext import commands
 import config
 from logs import logs
@@ -13,12 +13,17 @@ class tempvoice(commands.Cog):
     @commands.Cog.listener()
     async def on_ready(self):
         interface_embed = discord.Embed(title="tempvoice interface", description="", color=2829617)
-        interface_embed.set_image(url="https://media.discordapp.net/attachments/1101840195466301460/1101858557168734218/interface.png")
+        interface_embed.set_image(url="https://media.discordapp.net/attachments/1101840195466301460/1105105018174062672/interface.png")
 
         emoji_rename = discord.PartialEmoji(name="rename", animated=False, id=1101840047549984779)
         emoji_limit = discord.PartialEmoji(name="limit", animated=False, id=1101840054764183592)
         emoji_private = discord.PartialEmoji(name="private", animated=False, id=1101840061030477926)
+        emoji_visibility = discord.PartialEmoji(name="visibility", animated=False, id=1105095004738822224)
         emoji_region = discord.PartialEmoji(name="region", animated=False, id=1101840066990583880)
+        emoji_allow = discord.PartialEmoji(name="allow", animated=False, id=1105095038402297968)
+        emoji_forbid = discord.PartialEmoji(name="forbid", animated=False, id=1105095059289944185)
+        emoji_transfer = discord.PartialEmoji(name="transfer", animated=False, id=1105103753687871623)
+        emoji_kick = discord.PartialEmoji(name="kick", animated=False, id=1105103727112757269)
         emoji_delete = discord.PartialEmoji(name="delete", animated=False, id=1101839965798793227)
 
         interface_view = View(timeout=None)
@@ -26,19 +31,34 @@ class tempvoice(commands.Cog):
         button_rename = Button(label="", style=discord.ButtonStyle.blurple, emoji=emoji_rename)
         button_limit = Button(label="", style=discord.ButtonStyle.blurple, emoji=emoji_limit)
         button_private = Button(label="", style=discord.ButtonStyle.blurple, emoji=emoji_private)
+        button_visibility = Button(label="", style=discord.ButtonStyle.blurple, emoji=emoji_visibility)
         button_region = Button(label="", style=discord.ButtonStyle.blurple, emoji=emoji_region)
+        button_allow = Button(label="", style=discord.ButtonStyle.blurple, emoji=emoji_allow)
+        button_forbid = Button(label="", style=discord.ButtonStyle.blurple, emoji=emoji_forbid)
+        button_transfer = Button(label="", style=discord.ButtonStyle.blurple, emoji=emoji_transfer)
+        button_kick = Button(label="", style=discord.ButtonStyle.blurple, emoji=emoji_kick)
         button_delete = Button(label="", style=discord.ButtonStyle.blurple, emoji=emoji_delete)
 
         button_rename.callback = tempvoice.rename
         button_limit.callback = tempvoice.limit
         button_private.callback = tempvoice.private
+        button_visibility.callback = tempvoice.visibility
         button_region.callback = tempvoice.region
+        button_allow.callback = tempvoice.allow
+        button_forbid.callback = tempvoice.forbid
+        button_transfer.callback = tempvoice.transfer
+        button_kick.callback = tempvoice.kick
         button_delete.callback = tempvoice.delete
 
         interface_view.add_item(button_rename)
         interface_view.add_item(button_limit)
         interface_view.add_item(button_private)
+        interface_view.add_item(button_visibility)
         interface_view.add_item(button_region)
+        interface_view.add_item(button_allow)
+        interface_view.add_item(button_forbid)
+        interface_view.add_item(button_transfer)
+        interface_view.add_item(button_kick)
         interface_view.add_item(button_delete)
 
         await self.client.get_channel(config.interface_channel).purge(limit=100)
@@ -73,7 +93,7 @@ class tempvoice(commands.Cog):
         await log_channel.send(embed=embed)
         await member.move_to(temp_channel)
 
-    async def rename():
+    async def rename(self, ctx: discord.Interaction):
         pass
 
     async def limit():
@@ -82,7 +102,22 @@ class tempvoice(commands.Cog):
     async def private():
         pass
 
+    async def visibility():
+        pass
+
     async def region():
+        pass
+
+    async def allow():
+        pass
+
+    async def forbid():
+        pass
+
+    async def transfer():
+        pass
+
+    async def kick():
         pass
 
     async def delete():
