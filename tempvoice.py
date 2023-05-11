@@ -39,16 +39,16 @@ class tempvoice(commands.Cog):
         button_kick = Button(label="", style=discord.ButtonStyle.blurple, emoji=emoji_kick)
         button_delete = Button(label="", style=discord.ButtonStyle.blurple, emoji=emoji_delete)
 
-        button_rename.callback = tempvoice.rename
-        button_limit.callback = tempvoice.limit
-        button_private.callback = tempvoice.private
-        button_visibility.callback = tempvoice.visibility
-        button_region.callback = tempvoice.region
-        button_allow.callback = tempvoice.allow
-        button_forbid.callback = tempvoice.forbid
-        button_transfer.callback = tempvoice.transfer
-        button_kick.callback = tempvoice.kick
-        button_delete.callback = tempvoice.delete
+        button_rename.callback = self.rename
+        button_limit.callback = self.limit
+        button_private.callback = self.private
+        button_visibility.callback = self.visibility
+        button_region.callback = self.region
+        button_allow.callback = self.allow
+        button_forbid.callback = self.forbid
+        button_transfer.callback = self.transfer
+        button_kick.callback = self.kick
+        button_delete.callback = self.delete
 
         interface_view.add_item(button_rename)
         interface_view.add_item(button_limit)
@@ -69,23 +69,27 @@ class tempvoice(commands.Cog):
         log_channel = self.client.get_channel(config.voice_log)
         # Tempvoice creation
         if after.channel != None and after.channel.id == config.tempvoice_channel:
-            await tempvoice.voice_create(self, member)
+            await self.voice_create(member)
         # Tempvoice deletion
-        if before.channel != None and before.channel in self.temp_channels and before.channel.members == []:
-            await before.channel.delete()
-            embed:discord.Embed = await logs.log_embed(
-                title=f"{self.client.user.name}",
-                description=f"<:red:1097244281816748072> tempvoice `#{before.channel.name}` was deleted",
-                user=self.client.user
-                )
-            await log_channel.send(embed=embed)
+        for t in self.temp_channels:
+            if before.channel != None and before.channel == t.get("channel") and before.channel.members == []:
+                await before.channel.delete()
+                embed:discord.Embed = await logs.log_embed(
+                    self=self,
+                    title=f"{self.client.user.name}",
+                    description=f"<:red:1097244281816748072> tempvoice `#{before.channel.name}` was deleted",
+                    user=self.client.user
+                    )
+                await log_channel.send(embed=embed)
+                self.temp_channels.remove(t)
 
     async def voice_create(self, member: discord.Member):
         log_channel = self.client.get_channel(config.voice_log)
         create_channel = self.client.get_channel(config.tempvoice_channel)
         temp_channel = await create_channel.category.create_voice_channel(member.name)
-        self.temp_channels.append(temp_channel)
+        self.temp_channels.append({'channel': temp_channel, 'owner_id': member.id})
         embed:discord.Embed = await logs.log_embed(
+            self=self,
             title=f"{self.client.user.name}",
             description=f"<:green:1097244269267402812> tempvoice <#{temp_channel.id}> was created",
             user=self.client.user
@@ -94,7 +98,17 @@ class tempvoice(commands.Cog):
         await member.move_to(temp_channel)
 
     async def rename(self, ctx: discord.Interaction):
-        pass
+        rename_modal = Modal(title="Rename")
+        rename_modal.add_item(InputText(label="Enter new channel name"))
+        async def callback(interaction: discord.Interaction):
+            await self.client.get_channel(t.get("channel").id).edit(name=rename_modal.children[0].value)
+            await interaction.response.send_message(content="name changed", ephemeral=True)
+        rename_modal.callback = callback
+        for t in self.temp_channels:
+            if t.get("owner_id") == ctx.user.id:
+                await ctx.response.send_modal(rename_modal)
+                return
+        await ctx.response.send_message(content="пошел нахуй", ephemeral=True)
 
     async def limit():
         pass
