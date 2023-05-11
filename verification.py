@@ -13,8 +13,9 @@ class verification(commands.Cog):
     async def on_ready(self):
         verif_embed = discord.Embed(title="verification", description=f"please use the button below to verify that you are not a robot", color=2829617)
 
+        emoji_verified = discord.PartialEmoji(name="verified", animated=False, id=1105969558692569198)
         verif_view = View(timeout=None)
-        button_start = Button(label="verification", style=discord.ButtonStyle.green)
+        button_start = Button(label="verify", style=discord.ButtonStyle.blurple, emoji=emoji_verified)
         button_start.callback = verification.give_role
         verif_view.add_item(button_start)
 
