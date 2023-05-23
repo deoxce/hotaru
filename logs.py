@@ -61,6 +61,7 @@ class logs(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message_edit(self, before: discord.Message, after: discord.Message):
+        if before.author == self.client.user: return None
         if before.guild.id != config.guild_id: return None
         channel = self.client.get_channel(config.message_log)
         if before.content == after.content and len(after.attachments) < len(before.attachments):
