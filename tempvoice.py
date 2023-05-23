@@ -213,7 +213,7 @@ class tempvoice(commands.Cog):
             if selected == "12": await channel.edit(rtc_region="us-south")
             if selected == "13": await channel.edit(rtc_region="us-west")
             if self.current_response and ctx.user.id == self.current_response.user.id: await self.current_response.delete_original_response()
-            self.current_response = await interaction.response.send_message("region changed", ephemeral=True)
+            self.current_response = await interaction.response.send_message(content="region changed", ephemeral=True)
         select.callback = callback
         view = View()
         view.add_item(select)
@@ -222,23 +222,124 @@ class tempvoice(commands.Cog):
 
     @permission_check
     async def allow(self, ctx: discord.Interaction, channel_owner):
-        pass
+        channel: discord.VoiceChannel = channel_owner.get("channel")
+        options = []
+        for member in ctx.guild.members:
+            if channel.permissions_for(member).connect == False or channel.permissions_for(member).view_channel == False:
+                options.append(discord.SelectOption(
+                    label=await self.get_name(member),
+                    description=f"{member.name}#{member.discriminator}",
+                    #emoji=await self.get_avatar(member),
+                    value=str(member.id)))
+        
+        if (len(options) < 1):
+            if self.current_response and ctx.user.id == self.current_response.user.id: await self.current_response.delete_original_response()
+            self.current_response = await ctx.response.send_message("all users have access already", ephemeral=True)
+            return
+        
+        select = Select(placeholder="selected users will have access to channel", options=options, min_values=1, max_values=len(options))
+        async def callback(interaction: discord.Interaction):
+            for user_id in interaction.data["values"]:
+                await channel.set_permissions(ctx.guild.get_member(int(user_id)), connect=True, view_channel=True)
+            if self.current_response and ctx.user.id == self.current_response.user.id: await self.current_response.delete_original_response()
+            self.current_response = await interaction.response.send_message("access granted", ephemeral=True)
+        select.callback = callback
+        view = View()
+        view.add_item(select)
+        if self.current_response and ctx.user.id == self.current_response.user.id: await self.current_response.delete_original_response()
+        self.current_response = await ctx.response.send_message("select users:", view=view, ephemeral=True)
 
     @permission_check
     async def forbid(self, ctx: discord.Interaction, channel_owner):
-        pass
+        channel: discord.VoiceChannel = channel_owner.get("channel")
+        options = []
+        for member in ctx.guild.members:
+            if channel.permissions_for(member).connect == True or channel.permissions_for(member).view_channel == True:
+                options.append(discord.SelectOption(
+                    label=await self.get_name(member),
+                    description=f"{member.name}#{member.discriminator}",
+                    #emoji=await self.get_avatar(member),
+                    value=str(member.id)))
+        
+        if (len(options) < 1):
+            if self.current_response and ctx.user.id == self.current_response.user.id: await self.current_response.delete_original_response()
+            self.current_response = await ctx.response.send_message("all users does not have access already", ephemeral=True)
+            return
+        
+        select = Select(placeholder="selected users will not have access to channel", options=options, min_values=1, max_values=len(options))
+        async def callback(interaction: discord.Interaction):
+            for user_id in interaction.data["values"]:
+                await channel.set_permissions(ctx.guild.get_member(int(user_id)), connect=False, view_channel=False)
+            if self.current_response and ctx.user.id == self.current_response.user.id: await self.current_response.delete_original_response()
+            self.current_response = await interaction.response.send_message("access reverted", ephemeral=True)
+        select.callback = callback
+        view = View()
+        view.add_item(select)
+        if self.current_response and ctx.user.id == self.current_response.user.id: await self.current_response.delete_original_response()
+        self.current_response = await ctx.response.send_message("select users:", view=view, ephemeral=True)
 
     @permission_check
     async def transfer(self, ctx: discord.Interaction, channel_owner):
-        pass
-
+        options = []
+        for member in ctx.guild.members:
+            options.append(discord.SelectOption(
+                label=await self.get_name(member),
+                description=f"{member.name}#{member.discriminator}",
+                #emoji=await self.get_avatar(member),
+                value=str(member.id)))
+        select = Select(placeholder="channel will be tranfered to selected user", options=options)
+        async def callback(interaction: discord.Interaction):
+            self.temp_channels.remove(channel_owner)
+            channel_owner.update({"owner_id": int(interaction.data["values"][0])})
+            self.temp_channels.append(channel_owner)
+            if self.current_response and ctx.user.id == self.current_response.user.id: await self.current_response.delete_original_response()
+            self.current_response = await interaction.response.send_message("channel transfered", ephemeral=True)
+        select.callback = callback
+        view = View()
+        view.add_item(select)
+        if self.current_response and ctx.user.id == self.current_response.user.id: await self.current_response.delete_original_response()
+        self.current_response = await ctx.response.send_message("select user:", view=view, ephemeral=True)
+            
     @permission_check
     async def kick(self, ctx: discord.Interaction, channel_owner):
-        pass
-
+        channel: discord.VoiceChannel = channel_owner.get("channel")
+        options = []
+        for member in channel.members:
+            options.append(discord.SelectOption(
+                label=await self.get_name(member),
+                description=f"{member.name}#{member.discriminator}",
+                #emoji=await self.get_avatar(member),
+                value=str(member.id)))
+        select = Select(placeholder="selected users will be kicked", options=options, min_values=1, max_values=len(options))
+        async def callback(interaction: discord.Interaction):
+            for user_id in interaction.data["values"]:
+                member: discord.Member = ctx.guild.get_member(int(user_id))
+                await member.move_to(None)
+            if self.current_response and ctx.user.id == self.current_response.user.id: await self.current_response.delete_original_response()
+            self.current_response = await interaction.response.send_message("users kicked", ephemeral=True)
+        select.callback = callback
+        view = View()
+        view.add_item(select)
+        if self.current_response and ctx.user.id == self.current_response.user.id: await self.current_response.delete_original_response()
+        self.current_response = await ctx.response.send_message("select users:", view=view, ephemeral=True)
+                
     @permission_check
     async def delete(self, ctx: discord.Interaction, channel_owner):
         self.temp_channels.remove(channel_owner)
         await self.voice_delete(channel_owner.get("channel"))
         if self.current_response and ctx.user.id == self.current_response.user.id: await self.current_response.delete_original_response()
         self.current_response = await ctx.response.send_message(content="channel deleted", ephemeral=True)
+
+    async def get_name(self, member: discord.Member):
+        if member.nick == None:
+            name = member.name
+        else:
+            name = member.nick
+        return name
+
+    async def get_avatar(self, user: discord.User):
+        if user.avatar == None:
+            avatar = user.default_avatar.url
+        else:
+            avatar = user.avatar.url
+        return avatar
