@@ -54,4 +54,15 @@ async def guild_only(ctx: discord.Interaction):
         raise commands.NoPrivateMessage
     return True
 
+@client.slash_command(name="give_unverified")
+async def give_unverified(ctx: discord.Interaction):
+    unverified_role = discord.utils.get(ctx.guild.roles, id=config.unverified_role)
+    verified_role = discord.utils.get(ctx.guild.roles, id=config.default_role)
+    count = 0
+    for member in ctx.guild.members:
+        if not member.bot and verified_role not in member.roles and unverified_role not in member.roles:
+            await member.add_roles(unverified_role)
+            count += 1
+    await ctx.response.send_message(f"done. successfully assigned role to {count} members", ephemeral=True)
+
 client.run(config.token)
